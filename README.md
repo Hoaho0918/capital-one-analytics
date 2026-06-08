@@ -12,33 +12,7 @@ An enterprise-grade data engineering project orchestrating financial wealth mana
 *   **🥇 Gold Layer**: Semantic reporting layer. Delivers performance-optimized, analytical tables designed for direct querying and dashboard consumption.
 
 ### Pipeline Flow Diagram
-```mermaid
-graph LR
-    %% Styles
-    classDef source fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef bronze fill:#cd7f32,stroke:#333,stroke-width:2px,color:#fff;
-    classDef silver fill:#c0c0c0,stroke:#333,stroke-width:2px,color:#000;
-    classDef gold fill:#ffd700,stroke:#333,stroke-width:2px,color:#000;
-    classDef audit fill:#ff9999,stroke:#333,stroke-width:1px;
-    classDef engine fill:#33b5e5,stroke:#333,stroke-width:1px,color:#fff;
-
-    %% Orchestration Overlay
-    subgraph Airflow [Apache Airflow Workflow Orchestrator]
-        Source[sampleDataset.csv]:::source -->|GitHub Actions Ingestion| Bronze[Bronze Layer<br>Python / Pandas]:::bronze
-        Bronze -->|Metadata Appended| AuditGate{Quality Gate}:::engine
-        
-        AuditGate -->|Failures Logs| AuditLogs[data/audit/<br>pipeline_runs.csv<br>dq_checks.csv]:::audit
-        AuditGate -->|Pass| Silver[Silver Layer<br>dbt Python & SQL Views]:::silver
-        
-        Silver -->|Flatten & Clean| Gold[Gold Layer<br>dbt Materialized Tables]:::gold
-    end
-
-    subgraph Gold_Marts [Analytical Tables]
-        Gold --> M1[customer_daily_summary]
-        Gold --> M2[customer_segment_metrics]
-        Gold --> M3[transaction_daily_summary]
-    end
-```
+![Fintech Analytics Data Pipeline Architecture](docs/architecture_diagram.png)
 
 
 ---
