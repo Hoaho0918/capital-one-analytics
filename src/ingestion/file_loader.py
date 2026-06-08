@@ -42,7 +42,7 @@ def ingest_to_bronze(source_file_path: str, output_directory: str):
 
 if __name__ == "__main__":
     # Your verified lowercase data path configurations
-    RAW_DATA_SOURCE = "data/bronze/sampleDataset.csv"
+    RAW_DATA_SOURCE = "data/bronze/sampledataset.csv"
     BRONZE_LANDING_ZONE = "data/bronze/"
     
     # Start Audit Framework Logging Session
