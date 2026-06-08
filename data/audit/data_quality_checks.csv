@@ -1,0 +1,2 @@
+check_id,run_id,layer,test_name,target_column,status,failure_count,checked_at
+6856c89a-6e4c-489c-be45-a4bf83bb3010,071695a9-4a7d-4454-b10f-da5222cd8c47,BRONZE,required_metadata_columns_exist,ALL,PASS,0,2026-06-08T01:50:38.510722
