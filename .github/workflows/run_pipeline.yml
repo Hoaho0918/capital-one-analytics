@@ -28,11 +28,11 @@ jobs:
     - name: Run Bronze Ingestion
       run: |
         python src/ingestion/file_loader.py
-
-    - name: Commit Ingested Bronze Data
+    - name: Commit Ingested Bronze Data and Quality Audits
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/bronze/
-        git commit -m "data: automate bronze ingestion metadata addition" || echo "No changes to commit"
+        git add data/bronze/ data/audit/
+        git commit -m "data: automate bronze ingestion and data quality log capture" || echo "No changes to commit"
         git push
+
