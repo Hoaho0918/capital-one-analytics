@@ -35,11 +35,11 @@ Analysts can query these final production-ready assets directly in the workspace
 
 | Target Layer | Production Table Name | Primary Key | Description |
 | :--- | :--- | :--- | :--- |
-| **Gold Mart** | `gold.customer_daily_summary` | `customer_id`, `activity_date` | Aggregated daily balances, deposits, and market investment allocations per user. |
-| **Gold Mart** | `gold.customer_segment_metrics` | *Cohort Composite* | Strategic demographic clustering grouping risk tolerances against outstanding loan volume. |
-| **Gold Mart** | `gold.transaction_daily_summary` | `activity_date`, `account_type` | High-frequency volume velocity monitors tracking fraud threshold breaches. |
-| **Audit Log** | `audit.pipeline_runs` | `run_id` | Core DAG runtime execution tracking framework engine logs. |
-| **Audit Log** | `audit.data_quality_checks` | `check_id` | Column-level assertion test histories (Unique, Not Null, In-Bounds). |
+|**Gold Mart**| `gold.customer_daily_summary` | `customer_id`, `activity_date` | Aggregated daily balances, deposits, and market investment allocations per user. |
+|**Gold Mart**| `gold.customer_segment_metrics` | *Cohort Composite* | Strategic demographic clustering grouping risk tolerances against outstanding loan volume. |
+|**Gold Mart**| `gold.transaction_daily_summary` | `activity_date`, `account_type` | High-frequency volume velocity monitors tracking fraud threshold breaches. |
+|**Audit Log**| `audit.pipeline_runs` | `run_id` | Core DAG runtime execution tracking framework engine logs. |
+|**Audit Log**| `audit.data_quality_checks` | `check_id` | Column-level assertion test histories (Unique, Not Null, In-Bounds). |
 
 ---
 
