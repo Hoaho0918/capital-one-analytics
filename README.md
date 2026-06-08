@@ -24,13 +24,13 @@ graph LR
 
     %% Orchestration Overlay
     subgraph Airflow [Apache Airflow Workflow Orchestrator]
-        Source[📄 sampleDataset.csv]:::source -->|GitHub Actions Ingestion| Bronze[🟫 Bronze Layer<br>Python / Pandas]:::bronze
-        Bronze -->|Metadata Appended| AuditGate{🕵️ Quality Gate}:::engine
+        Source[sampleDataset.csv]:::source -->|GitHub Actions Ingestion| Bronze[Bronze Layer<br>Python / Pandas]:::bronze
+        Bronze -->|Metadata Appended| AuditGate{Quality Gate}:::engine
         
-        AuditGate -->|Failures Logs| AuditLogs[📋 data/audit/<br>pipeline_runs.csv<br>dq_checks.csv]:::audit
-        AuditGate -->|Pass| Silver[🥈 Silver Layer<br>dbt Python & SQL Views]:::silver
+        AuditGate -->|Failures Logs| AuditLogs[data/audit/<br>pipeline_runs.csv<br>dq_checks.csv]:::audit
+        AuditGate -->|Pass| Silver[Silver Layer<br>dbt Python & SQL Views]:::silver
         
-        Silver -->|Flatten & Clean| Gold[🥇 Gold Layer<br>dbt Materialized Tables]:::gold
+        Silver -->|Flatten & Clean| Gold[Gold Layer<br>dbt Materialized Tables]:::gold
     end
 
     subgraph Gold_Marts [Analytical Tables]
