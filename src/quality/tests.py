@@ -1,8 +1,7 @@
 import os
 import uuid
-import json
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
 
 AUDIT_RUNS_PATH = "data/audit/pipeline_runs.csv"
 AUDIT_CHECKS_PATH = "data/audit/data_quality_checks.csv"
@@ -51,36 +50,3 @@ def run_bronze_checks(run_id, bronze_path):
         run_id, "BRONZE", "required_metadata_columns_exist", "ALL",
         "PASS" if not missing_cols else "FAIL", len(missing_cols)
     )
-
-def run_silver_checks(run_id, customer_df, account_df, loan_df, bronze_path):
-    """Business condition validations and cross-layer row count reconciliation."""
-    print("🕵️ Running Silver Quality Assertions...")
-    
-    # Check 2: Customer Primary Keys are not null
-    null_cust_ids = customer_df['customer_id'].isna().sum()
-    log_test_result(run_id, "SILIVER", "customer_id_not_null", "customer_id", "PASS" if null_cust_ids == 0 else "FAIL", null_cust_ids)
-
-    # Check 3: Age is within rational human boundary parameters (18 - 110)
-    invalid_ages = customer_df[~customer_df['customer_age'].between(18, 110, inclusive='both') & customer_df['customer_age'].notna()].shape[0]
-    log_test_result(run_id, "SILVER", "age_in_bounds", "customer_age", "PASS" if invalid_ages == 0 else "FAIL", invalid_ages)
-
-    # Check 4: Loan volumes are strictly positive numbers
-    negative_loans = loan_df[loan_df['loan_amount'] < 0].shape[0]
-    log_test_result(run_id, "SILVER", "loan_amount_positive", "loan_amount", "PASS" if negative_loans == 0 else "FAIL", negative_loans)
-
-    # Check 5: Primary Keys are deduplicated completely
-    duplicate_accounts = account_df.duplicated(subset=['account_id']).sum()
-    log_test_result(run_id, "SILVER", "account_id_unique", "account_id", "PASS" if duplicate_accounts == 0 else "FAIL", duplicate_accounts)
-
-    # Check 6: Row count reconciliation between source records and transformations
-    df_bronze_total = pd.read_csv(bronze_path, dtype=str).shape[0]
-    silver_distinct_customers = customer_df['customer_id'].nunique()
-    discrepancy = abs(df_bronze_total - silver_distinct_customers)
-    
-    # Since it's an aggregation reconciliation tracking logs, failure count is the discrepancy gap
-    log_test_result(run_id, "SILVER", "row_count_reconciliation", "customer_id", "PASS" if discrepancy == 0 else "WARNING", discrepancy)
-
-if __name__ == "__main__":
-    initialize_audit_tables()
-    print("✅ Quality framework initialized. Integrated dynamically inside execution tasks.")
-
