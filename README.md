@@ -7,9 +7,9 @@ An enterprise-grade data engineering project orchestrating financial wealth mana
 ## Architectural Framework
 
 ### Medallion Layer Definitions
-*   **🟫 Bronze Layer**: Raw landing zone. Stores the source datasets exactly as received with immutable ingestion audit parameters.
-*   **🥈 Silver Layer**: Conformance and data quality layer. Standardizes column names, casts messy string-dictionaries into clean tabular formats, validates value ranges, and handles duplicates.
-*   **🥇 Gold Layer**: Semantic reporting layer. Delivers performance-optimized, analytical tables designed for direct querying and dashboard consumption.
+*   **Bronze Layer**: Raw landing zone. Stores the source datasets exactly as received with immutable ingestion audit parameters.
+*   **Silver Layer**: Conformance and data quality layer. Standardizes column names, casts messy string-dictionaries into clean tabular formats, validates value ranges, and handles duplicates.
+*   **Gold Layer**: Semantic reporting layer. Delivers performance-optimized, analytical tables designed for direct querying and dashboard consumption.
 
 ### Pipeline Flow Diagram
 ![Fintech Analytics Data Pipeline Architecture](docs/architecture_diagram.png)
@@ -21,10 +21,10 @@ An enterprise-grade data engineering project orchestrating financial wealth mana
 
 Before processing, input headers were mapped and locked into the following programmatic matrices to prevent runtime type drift:
 
-*   **👤 Customer Fields:** `Customer Profile.customer_id`, `Customer Profile.age`, `Customer Profile.occupation`, `Customer Profile.education_level`, `Customer Profile.marital_status`, `Customer Profile.dependents`, `Customer Profile.region`, `Customer Profile.employment_history`, `Customer Profile.address`
-*   **💸 Transaction Fields:** `Transaction Description`, `Account Activity.account_id`, `Account Activity.balance`, `Account Activity.deposits`, `Account Activity.withdrawals`, `Account Activity.transfers`, `Account Activity.international_transfers`, `Account Activity.investments`, `Account Activity.account_type`, `Loan Application Summary.loan_amount`, `Loan Application Summary.loan_purpose`, `Loan Application Summary.loan_term`, `Loan Application Summary.interest_rate`, `Time Series Data.transactions`, `Time Series Data.repayments`
-*   **⚠️ Risk / Behavior Fields:** `Customer Profile.risk_tolerance`, `Customer Profile.investment_goals`, `Customer Profile.financial_history`, `Customer Profile.sector`, `Customer Profile.income_level`, `Account Activity.customer_id`, `Account Activity.transaction_threshold`, `Loan Application Summary.employment_status`, `Loan Application Summary.loan_status`
-*   **📅 Date/Time Fields:** `Time Series Data.dates`
+*   **Customer Fields:** `Customer Profile.customer_id`, `Customer Profile.age`, `Customer Profile.occupation`, `Customer Profile.education_level`, `Customer Profile.marital_status`, `Customer Profile.dependents`, `Customer Profile.region`, `Customer Profile.employment_history`, `Customer Profile.address`
+*   **Transaction Fields:** `Transaction Description`, `Account Activity.account_id`, `Account Activity.balance`, `Account Activity.deposits`, `Account Activity.withdrawals`, `Account Activity.transfers`, `Account Activity.international_transfers`, `Account Activity.investments`, `Account Activity.account_type`, `Loan Application Summary.loan_amount`, `Loan Application Summary.loan_purpose`, `Loan Application Summary.loan_term`, `Loan Application Summary.interest_rate`, `Time Series Data.transactions`, `Time Series Data.repayments`
+*   **Risk / Behavior Fields:** `Customer Profile.risk_tolerance`, `Customer Profile.investment_goals`, `Customer Profile.financial_history`, `Customer Profile.sector`, `Customer Profile.income_level`, `Account Activity.customer_id`, `Account Activity.transaction_threshold`, `Loan Application Summary.employment_status`, `Loan Application Summary.loan_status`
+*   **Date/Time Fields:** `Time Series Data.dates`
 
 ---
 
@@ -35,11 +35,11 @@ Analysts can query these final production-ready assets directly in the workspace
 
 | Target Layer | Production Table Name | Primary Key | Description |
 | :--- | :--- | :--- | :--- |
-| **🥇 Gold Mart** | `gold.customer_daily_summary` | `customer_id`, `activity_date` | Aggregated daily balances, deposits, and market investment allocations per user. |
-| **🥇 Gold Mart** | `gold.customer_segment_metrics` | *Cohort Composite* | Strategic demographic clustering grouping risk tolerances against outstanding loan volume. |
-| **🥇 Gold Mart** | `gold.transaction_daily_summary` | `activity_date`, `account_type` | High-frequency volume velocity monitors tracking fraud threshold breaches. |
-| **📋 Audit Log** | `audit.pipeline_runs` | `run_id` | Core DAG runtime execution tracking framework engine logs. |
-| **📋 Audit Log** | `audit.data_quality_checks` | `check_id` | Column-level assertion test histories (Unique, Not Null, In-Bounds). |
+| **Gold Mart** | `gold.customer_daily_summary` | `customer_id`, `activity_date` | Aggregated daily balances, deposits, and market investment allocations per user. |
+| **Gold Mart** | `gold.customer_segment_metrics` | *Cohort Composite* | Strategic demographic clustering grouping risk tolerances against outstanding loan volume. |
+| **Gold Mart** | `gold.transaction_daily_summary` | `activity_date`, `account_type` | High-frequency volume velocity monitors tracking fraud threshold breaches. |
+| **Audit Log** | `audit.pipeline_runs` | `run_id` | Core DAG runtime execution tracking framework engine logs. |
+| **Audit Log** | `audit.data_quality_checks` | `check_id` | Column-level assertion test histories (Unique, Not Null, In-Bounds). |
 
 ---
 
@@ -83,5 +83,5 @@ Running Bronze Integrity Gates for: data/bronze/bronze_raw_landing.csv
 [PASS] required_metadata_columns_exist (Failure Count: 0)
 
 Bronze Layer build and quality validations complete.
-Process completed with exit code 0. ✅
+Process completed with exit code 0.
 ```
