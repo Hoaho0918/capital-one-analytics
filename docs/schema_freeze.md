@@ -1,4 +1,4 @@
-# SCHEMA FREEZE VER. 1.0.0
+# SCHEMA FREEZE
 **File Source:** https://www.kaggle.com/datasets/s3r1alsh0ck/finance-dataset-for-fintech-applications
 
 ## Categorized Fields Matrix
