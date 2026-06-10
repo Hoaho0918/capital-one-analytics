@@ -26,6 +26,7 @@ Before processing, input headers were mapped and locked into the following progr
 *   **Risk / Behavior Fields:** `Customer Profile.risk_tolerance`, `Customer Profile.investment_goals`, `Customer Profile.financial_history`, `Customer Profile.sector`, `Customer Profile.income_level`, `Account Activity.customer_id`, `Account Activity.transaction_threshold`, `Loan Application Summary.employment_status`, `Loan Application Summary.loan_status`
 *   **Date/Time Fields:** `Time Series Data.dates`
 
+
 ---
 
 ## Production Data Dictionary
