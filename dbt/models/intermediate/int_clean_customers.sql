@@ -7,10 +7,10 @@ with staging_source as (
 deduplicated as (
     select
         *,
-        -- Deduplicate by taking the latest customer profile metadata record
+        -- Deduplicate by customer_id to guarantee unique records
         row_number() over (
             partition by customer_id 
-            order by line_ingested_at desc
+            order by customer_id
         ) as row_num
     from staging_source
 )
@@ -18,28 +18,22 @@ deduplicated as (
 select
     customer_id,
     
-    -- Validate numeric range for age (cap outliers or corrupt system entry text strings)
+    -- Validate numeric range for age (18 to 110)
     case 
-        when customer_age between 18 and 110 then customer_age
+        when customer_age between 18 and 110 then customer_age 
         else null 
     end as customer_age,
     
-    -- Standardize formatting rules to title casing
+    -- Standardize string casing
     initcap(occupation) as occupation,
     initcap(education_level) as education_level,
     initcap(marital_status) as marital_status,
+    dependent_count,
     
-    -- Normalize regional entries into clean uppercase codes
-    upper(region) as region_code,
-    physical_address,
-    
-    -- Preserve risk parameters for downstream risk profiles
-    risk_tolerance_tier,
-    investment_goal,
-    financial_history_tier,
-    employment_sector,
-    income_tier,
-    dependent_count
+    -- Normalize region codes to uppercase
+    upper(region_code) as region_code,
+    employment_history,
+    initcap(physical_address) as home_address
 
 from deduplicated
-where row_num = 1  -- Removes duplicates
+where row_num = 1
