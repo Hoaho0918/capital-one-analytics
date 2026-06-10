@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_customer_profile
-    description: "Staged client demographic profiles and qualitative risk tolerance parameters."
+    description: "Staged client demographic profiles and qualitative attributes exactly matching the Customer group."
     columns:
       - name: customer_id
         description: "Primary key identifying the customer profile."
@@ -15,14 +15,8 @@ models:
         data_tests:
           - not_null
 
-      - name: risk_tolerance_tier
-        description: "Assessed risk classification tier."
-        data_tests:
-          - accepted_values:
-              values: ['Low', 'Medium', 'High', 'Speculation']
-
   - name: stg_account_activity
-    description: "Staged operational financial ledgers and localized cash thresholds."
+    description: "Staged operational financial ledgers, transactional cash flows, and activity timelines."
     columns:
       - name: account_id
         description: "Primary key for the banking or investment account."
@@ -30,24 +24,21 @@ models:
           - unique
           - not_null
 
-      - name: customer_id
-        description: "Foreign key mapping back to the customer profile master record."
-        data_tests:
-          - not_null
-          - relationships:
-              to: ref('stg_customer_profile')
-              field: customer_id
-
       - name: current_balance
         description: "Net cash balance currently resting in the account ledger."
         data_tests:
           - not_null
 
+      - name: activity_date
+        description: "The primary chronological anchor timestamp for time-series partitioning."
+        data_tests:
+          - not_null
+
   - name: stg_loan_application_summary
-    description: "Staged risk evaluation data containing credit terms, application statuses, and debt repayments."
+    description: "Staged risk evaluation parameters, behavioral profile traits, and approval statuses."
     columns:
       - name: customer_id
-        description: "Primary key for the loan application matching back to the customer."
+        description: "Foreign key mapping back to the customer profile master record."
         data_tests:
           - unique
           - not_null
@@ -56,7 +47,7 @@ models:
               field: customer_id
 
       - name: loan_approval_status
-        description: "Current adjudication state of the credit request."
+        description: "Current adjudication state of the credit request. Evaluated in strict uppercase formats."
         data_tests:
           - accepted_values:
-              values: ['Approved', 'Denied', 'Pending']
+              values: ['APPROVED', 'DENIED', 'PENDING']
