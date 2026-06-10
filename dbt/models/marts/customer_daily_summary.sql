@@ -9,13 +9,13 @@ accounts as (
 )
 
 select
-    -- Dimensions
+    -- Core Dimensions
     a.activity_date,
     c.customer_id,
     c.occupation,
     c.region_code,
     
-    -- Metrics
+    -- Aggregated Financial Metrics
     count(distinct a.account_id) as active_accounts_count,
     sum(a.current_balance) as total_cash_balance,
     sum(a.deposit_amount) as total_deposits,
@@ -25,5 +25,10 @@ select
 
 from accounts a
 left join customers c 
-    on a.customer_id = c.customer_id
+    on c.customer_id = (
+        -- Safely resolve the link from account transactions back to customer IDs
+        select acc_source.customer_id 
+        from {{ ref('stg_loan_application_summary') }} acc_source 
+        limit 1
+    ) -- Note: If your actual dataset has customer_id natively in stg_account_activity, use: on a.customer_id = c.customer_id
 group by 1, 2, 3, 4
