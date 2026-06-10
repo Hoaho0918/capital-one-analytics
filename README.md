@@ -5,19 +5,12 @@ An enterprise-grade data engineering project orchestrating financial wealth mana
 ---
 
 ## Architectural Framework
-
-### Medallion Layer Definitions
-*   **Bronze Layer**: Raw landing zone. Stores the source datasets exactly as received with immutable ingestion audit parameters.
-*   **Silver Layer**: Conformance and data quality layer. Standardizes column names, casts messy string-dictionaries into clean tabular formats, validates value ranges, and handles duplicates.
-*   **Gold Layer**: Semantic reporting layer. Delivers performance-optimized, analytical tables designed for direct querying and dashboard consumption.
-
-### Pipeline Flow Diagram
 ![Fintech Analytics Data Pipeline Architecture](docs/architecture_diagram.png)
 
 
 ---
 
-## Schema Freeze Contract (Ver. 1.0.0)
+## Schema Freeze Contract
 
 Before processing, input headers were mapped and locked into the following programmatic matrices to prevent runtime type drift:
 
