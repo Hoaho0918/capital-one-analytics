@@ -9,7 +9,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 from src.quality.tests import initialize_audit_tables, log_pipeline_run, run_bronze_checks
 
 def ingest_to_bronze(source_file_path: str, output_directory: str):
-    # --- DEBUG HELPERS ---
     print("--- PIPELINE DIAGNOSTICS ---")
     print(f"Current working directory: {os.getcwd()}")
     print(f"Looking for source file at: {os.path.abspath(source_file_path)}")
