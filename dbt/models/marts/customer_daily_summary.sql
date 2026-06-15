@@ -8,18 +8,14 @@ accounts as (
     select * from {{ ref('int_clean_accounts') }}
 ),
 
--- 1. Pull the bridge table to map account IDs to customer IDs properly
-account_mapping as (
-    select 
-        account_id,
-        customer_id
-    from {{ ref('stg_loan_application_summary') }}
+loans as (
+    select * from {{ ref('int_clean_loans') }}
 )
 
 select
     -- Core Dimensions
     a.activity_date,
-    m.customer_id,   -- Pulled from the mapping bridge
+    c.customer_id,
     c.occupation,
     c.region_code,
 
@@ -32,11 +28,12 @@ select
     sum(a.market_investment_amount) as active_market_exposure
 
 from accounts a
--- 2. Link accounts to their specific customer_id via the bridge table
-left join account_mapping m 
-    on a.account_id = m.account_id
--- 3. Bring in customer details using the resolved customer_id
+-- 1. First link the account metrics to the loans dimension table to resolve the customer identity
+left join loans l 
+    on a.account_id = l.account_id
+
+-- 2. Then safely link to the demographics table using the resolved customer ID
 left join customers c 
-    on m.customer_id = c.customer_id
+    on l.customer_id = c.customer_id
 
 group by 1, 2, 3, 4
