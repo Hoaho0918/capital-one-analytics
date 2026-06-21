@@ -79,18 +79,21 @@ task_validate_bronze = PythonOperator(
 task_run_dbt_staging = BashOperator(
     task_id='run_dbt_staging',
     bash_command='dbt run --select staging.*',
+    cwd='/path/to/your/my_project/dbt_project',
     dag=dag,
 )
 
 task_run_dbt_silver = BashOperator(
     task_id='run_dbt_silver',
     bash_command='dbt run --select intermediate.*',
+    cwd='/path/to/your/my_project/dbt_project',
     dag=dag,
 )
 
 task_run_dbt_gold = BashOperator(
     task_id='run_dbt_gold',
     bash_command='dbt run --select marts.*',
+    cwd='/path/to/your/my_project/dbt_project',
     dag=dag,
 )
 
