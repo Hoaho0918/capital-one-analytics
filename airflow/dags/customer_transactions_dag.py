@@ -1,15 +1,23 @@
-
 import os
 import sys
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
 
-# Add project root directory path to resolve custom python modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+# Import Cosmos packages for dbt transformation handling
+from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, RenderConfig
+# Using Postgres mapping as a placeholder—swap out if using Snowflake/BigQuery
+from cosmos.profiles import PostgresUserPasswordProfileMapping 
 
-# 1. Default task parameters configuration
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+
+# Append project root directory path to system paths to resolve custom python modules
+sys.path.append(PROJECT_ROOT)
+
+DBT_PROJECT_PATH = os.path.join(PROJECT_ROOT, 'dbt')
+BRONZE_DATA_DIR = os.path.join(PROJECT_ROOT, 'data', 'bronze')
+
+# 2. DEFAULT DAG CONFIGURATION
 default_args = {
     'owner': 'data_engineering',
     'depends_on_past': False,
@@ -20,48 +28,51 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# 2. Define the core operational DAG parameters
 dag = DAG(
     'capital_one_financial_pipeline',
     default_args=default_args,
-    description='End-to-end orchestration framework from raw landing zone files to gold analytical marts.',
+    description='End-to-end framework upgraded with Cosmos for model-level visibility.',
     schedule_interval='@daily',
     catchup=False,
     max_active_runs=1
 )
 
-# 3. Python Task Wrappers
+# 3. PYTHON OPERATOR WRAPPERS WITH DYNAMIC PATHS
 def execute_bronze_ingestion():
-    """Wrapper executing the raw file landing zone ingestion."""
+    """Wrapper executing the raw file landing zone ingestion using safe paths."""
     from src.ingestion.file_loader import ingest_to_bronze
-    RAW_DATA_SOURCE = "data/bronze/sampleDataset.csv"
-    BRONZE_LANDING_ZONE = "data/bronze/"
-    ingest_to_bronze(RAW_DATA_SOURCE, BRONZE_LANDING_ZONE)
+    
+    raw_data_source = os.path.join(BRONZE_DATA_DIR, 'sampledataset.csv')
+    
+    # Run python loader script using dynamic runtime paths
+    ingest_to_bronze(raw_data_source, BRONZE_DATA_DIR)
 
 def execute_bronze_validation(**context):
     """Wrapper calling the data quality validation tests suite directly."""
     import uuid
     from src.quality.tests import initialize_audit_tables, run_bronze_checks
+    
     initialize_audit_tables()
     
     # Generate a unique run ID and pass it downstream using Airflow XComs
     run_id = str(uuid.uuid4())
     context['ti'].xcom_push(key='pipeline_run_id', value=run_id)
     
-    run_bronze_checks(run_id, "data/bronze/bronze_raw_landing.csv")
+    validation_target = os.path.join(BRONZE_DATA_DIR, 'bronze_raw_landing.csv')
+    run_bronze_checks(run_id, validation_target)
 
 def execute_audit_logging(**context):
     """Appends final orchestration health run metadata rows to audit files."""
     from src.quality.tests import log_pipeline_run
-    ti = context['ti']
     
+    ti = context['ti']
     # Retrieve the unique run ID passed from the validation task via XCom
     run_id = ti.xcom_pull(task_ids='validate_bronze', key='pipeline_run_id')
     start_time = ti.start_date.isoformat()
     
     log_pipeline_run(run_id, "ORCHESTRATION_RUN", "SUCCESS", start_time)
 
-# 4. Defining the Airflow Task Operator Components
+# 4. DEFINING THE PYTHON TASKS
 task_ingest_csv_to_bronze = PythonOperator(
     task_id='ingest_csv_to_bronze',
     python_callable=execute_bronze_ingestion,
@@ -75,28 +86,6 @@ task_validate_bronze = PythonOperator(
     dag=dag,
 )
 
-# Use dbt-cli selector flags to build modular stages without embedding SQL
-task_run_dbt_staging = BashOperator(
-    task_id='run_dbt_staging',
-    bash_command='dbt run --select staging.*',
-    cwd='/path/to/your/my_project/dbt_project',
-    dag=dag,
-)
-
-task_run_dbt_silver = BashOperator(
-    task_id='run_dbt_silver',
-    bash_command='dbt run --select intermediate.*',
-    cwd='/path/to/your/my_project/dbt_project',
-    dag=dag,
-)
-
-task_run_dbt_gold = BashOperator(
-    task_id='run_dbt_gold',
-    bash_command='dbt run --select marts.*',
-    cwd='/path/to/your/my_project/dbt_project',
-    dag=dag,
-)
-
 task_write_audit = PythonOperator(
     task_id='write_audit',
     python_callable=execute_audit_logging,
@@ -104,12 +93,46 @@ task_write_audit = PythonOperator(
     dag=dag,
 )
 
-# 5. Enforce strict sequential order dependency paths
+# 5. COSMOS DBT CONFIGURATION AND TASK GROUPS
+profile_config = ProfileConfig(
+    profile_name="my_dbt_profile_name",
+    target_name="dev",
+    profile_mapping=PostgresUserPasswordProfileMapping(conn_id="my_database_connection")
+)
+
+dbt_staging = DbtTaskGroup(
+    group_id="dbt_staging_layer",
+    project_config=ProjectConfig(DBT_PROJECT_PATH),
+    profile_config=profile_config,
+    # Points to your dbt/models/staging directory layout
+    render_config=RenderConfig(select=["path:models/staging"]), 
+    dag=dag,
+)
+
+dbt_silver = DbtTaskGroup(
+    group_id="dbt_silver_layer",
+    project_config=ProjectConfig(DBT_PROJECT_PATH),
+    profile_config=profile_config,
+    # Points to your dbt/models/intermediate directory layout
+    render_config=RenderConfig(select=["path:models/intermediate"]),
+    dag=dag,
+)
+
+dbt_gold = DbtTaskGroup(
+    group_id="dbt_gold_layer",
+    project_config=ProjectConfig(DBT_PROJECT_PATH),
+    profile_config=profile_config,
+    # Points to your dbt/models/marts directory layout
+    render_config=RenderConfig(select=["path:models/marts"]),
+    dag=dag,
+)
+
+# 6. ENFORCE STRICT SEQUENTIAL ORDER DEPENDENCY PATHS
 (
     task_ingest_csv_to_bronze 
     >> task_validate_bronze 
-    >> task_run_dbt_staging 
-    >> task_run_dbt_silver 
-    >> task_run_dbt_gold 
+    >> dbt_staging 
+    >> dbt_silver 
+    >> dbt_gold 
     >> task_write_audit
 )
