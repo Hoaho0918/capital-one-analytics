@@ -4,14 +4,10 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-# Import Cosmos packages for dbt transformation handling
 from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, RenderConfig
-# Using Postgres mapping as a placeholder—swap out if using Snowflake/BigQuery
-from cosmos.profiles import PostgresUserPasswordProfileMapping 
+from cosmos.profiles import SnowflakeUserPasswordProfileMapping
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-
-# Append project root directory path to system paths to resolve custom python modules
 sys.path.append(PROJECT_ROOT)
 
 DBT_PROJECT_PATH = os.path.join(PROJECT_ROOT, 'dbt')
@@ -39,22 +35,17 @@ dag = DAG(
 
 # 3. PYTHON OPERATOR WRAPPERS WITH DYNAMIC PATHS
 def execute_bronze_ingestion():
-    """Wrapper executing the raw file landing zone ingestion using safe paths."""
     from src.ingestion.file_loader import ingest_to_bronze
     
     raw_data_source = os.path.join(BRONZE_DATA_DIR, 'sampledataset.csv')
-    
-    # Run python loader script using dynamic runtime paths
     ingest_to_bronze(raw_data_source, BRONZE_DATA_DIR)
 
 def execute_bronze_validation(**context):
-    """Wrapper calling the data quality validation tests suite directly."""
     import uuid
     from src.quality.tests import initialize_audit_tables, run_bronze_checks
     
     initialize_audit_tables()
     
-    # Generate a unique run ID and pass it downstream using Airflow XComs
     run_id = str(uuid.uuid4())
     context['ti'].xcom_push(key='pipeline_run_id', value=run_id)
     
@@ -62,11 +53,9 @@ def execute_bronze_validation(**context):
     run_bronze_checks(run_id, validation_target)
 
 def execute_audit_logging(**context):
-    """Appends final orchestration health run metadata rows to audit files."""
     from src.quality.tests import log_pipeline_run
     
     ti = context['ti']
-    # Retrieve the unique run ID passed from the validation task via XCom
     run_id = ti.xcom_pull(task_ids='validate_bronze', key='pipeline_run_id')
     start_time = ti.start_date.isoformat()
     
@@ -95,10 +84,10 @@ task_write_audit = PythonOperator(
 
 # 5. COSMOS DBT CONFIGURATION AND TASK GROUPS
 profile_config = ProfileConfig(
-    profile_name="my_dbt_profile_name",
-    target_name="dev",
-    profile_mapping=PostgresUserPasswordProfileMapping(conn_id="my_database_connection")
-)
+    profile_name="capital_one_snowflake",
+    target_name="prod",
+    profile_mapping=SnowflakeUserPasswordProfileMapping(
+        conn_id="snowflake_production_conn"))
 
 dbt_staging = DbtTaskGroup(
     group_id="dbt_staging_layer",
