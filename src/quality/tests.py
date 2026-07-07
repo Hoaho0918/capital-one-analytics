@@ -44,7 +44,7 @@ def log_test_result(run_id, layer, test_name, column, status, failure_count):
     pd.concat([df, new_check]).to_csv(AUDIT_CHECKS_PATH, index=False)
 
 def run_bronze_checks(run_id, bronze_path):
-    print(f"🕵️ Running Bronze Integrity Gates for: {bronze_path}")
+    print(f"Running Bronze Integrity Gates for: {bronze_path}")
     df = pd.read_csv(bronze_path, dtype=str)
     
     required_metadata = ['ingested_at', 'source_file', 'batch_id']
