@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
+# Import Cosmos engines for managing dbt transformations inside Snowflake
 from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, RenderConfig, TestBehavior
 from cosmos.profiles import SnowflakeUserPasswordProfileMapping 
 
@@ -28,7 +29,7 @@ default_args = {
 dag = DAG(
     'capital_one_financial_pipeline',
     default_args=default_args,
-    description='Production-ready pipeline combining Cosmos visual tests and Python audit exports.',
+    description='Production-ready pipeline',
     schedule_interval='@daily',
     catchup=False,
     max_active_runs=1
@@ -109,7 +110,7 @@ profile_config = ProfileConfig(
     profile_name="capital_one_snowflake",
     target_name="prod",
     profile_mapping=SnowflakeUserPasswordProfileMapping(
-        conn_id="snowflake_production_conn" # Set this up under Admin -> Connections in Airflow UI
+        conn_id="snowflake_production_conn"
     )
 )
 
@@ -120,7 +121,7 @@ dbt_staging = DbtTaskGroup(
     profile_config=profile_config,
     render_config=RenderConfig(
         select=["path:models/staging"],
-        test_behavior=TestBehavior.AFTER_EACH # Builds a test box right after each staging table
+        test_behavior=TestBehavior.AFTER_EACH
     ), 
     dag=dag,
 )
@@ -131,7 +132,7 @@ dbt_silver = DbtTaskGroup(
     profile_config=profile_config,
     render_config=RenderConfig(
         select=["path:models/intermediate"],
-        test_behavior=TestBehavior.AFTER_EACH # Visual test gate inside Snowflake
+        test_behavior=TestBehavior.AFTER_EACH
     ),
     dag=dag,
 )
@@ -142,7 +143,7 @@ dbt_gold = DbtTaskGroup(
     profile_config=profile_config,
     render_config=RenderConfig(
         select=["path:models/marts"],
-        test_behavior=TestBehavior.AFTER_EACH # Protects final delivery metrics
+        test_behavior=TestBehavior.AFTER_EACH
     ),
     dag=dag,
 )
@@ -153,8 +154,8 @@ dbt_gold = DbtTaskGroup(
     >> task_validate_bronze 
     >> dbt_staging 
     >> dbt_silver 
-    >> task_audit_silver_metrics # 📊 Extracts silver data checks into your local CSV
+    >> task_audit_silver_metrics 
     >> dbt_gold 
-    >> task_audit_gold_metrics   # 📊 Extracts gold data checks into your local CSV
+    >> task_audit_gold_metrics 
     >> task_write_audit
 )
