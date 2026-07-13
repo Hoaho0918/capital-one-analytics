@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -42,7 +43,6 @@ def execute_bronze_ingestion():
     ingest_to_bronze(raw_data_source, BRONZE_DATA_DIR)
 
 def execute_bronze_validation(**context):
-    import uuid
     from src.quality.tests import initialize_audit_tables, run_bronze_checks
     initialize_audit_tables()
     
@@ -80,28 +80,24 @@ task_ingest_csv_to_bronze = PythonOperator(
 task_validate_bronze = PythonOperator(
     task_id='validate_bronze',
     python_callable=execute_bronze_validation,
-    provide_context=True,
     dag=dag,
 )
 
 task_audit_silver_metrics = PythonOperator(
     task_id='audit_silver_metrics',
     python_callable=capture_silver_metrics,
-    provide_context=True,
     dag=dag,
 )
 
 task_audit_gold_metrics = PythonOperator(
     task_id='audit_gold_metrics',
     python_callable=capture_gold_metrics,
-    provide_context=True,
     dag=dag,
 )
 
 task_write_audit = PythonOperator(
     task_id='write_audit',
     python_callable=execute_audit_logging,
-    provide_context=True,
     dag=dag,
 )
 
