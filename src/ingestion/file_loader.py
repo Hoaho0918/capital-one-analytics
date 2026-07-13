@@ -10,10 +10,10 @@ def ingest_to_bronze(source_file_path: str, output_directory: str):
     
     if os.path.exists("data"):
         print(f"Contents of 'data/': {os.listdir('data')}")
-    if os.path.exists("data/bronze"):
-        print(f"Contents of 'data/bronze/': {os.listdir('data/bronze')}")
+    if os.path.exists(output_directory):
+        print(f"Contents of landing directory: {os.listdir(output_directory)}")
     else:
-        print("CRITICAL: The root 'data' folder does not exist in your repository!")
+        print(f"Directory not found. Instantiating directory path at: {output_directory}")
     print("--------------------------------\n")
     
     if not os.path.exists(source_file_path):
