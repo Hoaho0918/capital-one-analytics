@@ -30,7 +30,7 @@ default_args = {
 dag = DAG(
     'capital_one_financial_pipeline',
     default_args=default_args,
-    description='Production-ready pipeline',
+    description='Production-ready pipeline with isolated dbt artifact boundaries',
     schedule_interval='@daily',
     catchup=False,
     max_active_runs=1
@@ -52,17 +52,22 @@ def execute_bronze_validation(**context):
     validation_target = os.path.join(BRONZE_DATA_DIR, 'bronze_raw_landing.csv')
     run_bronze_checks(run_id, validation_target)
 
-def capture_silver_metrics(**context):
+def isolate_and_capture_metrics(layer_name, **context):
     from src.quality.tests import log_dbt_test_results
     ti = context['ti']
     run_id = ti.xcom_pull(task_ids='validate_bronze', key='pipeline_run_id')
-    log_dbt_test_results(run_id, DBT_PROJECT_PATH, "SILVER")
-
-def capture_gold_metrics(**context):
-    from src.quality.tests import log_dbt_test_results
-    ti = context['ti']
-    run_id = ti.xcom_pull(task_ids='validate_bronze', key='pipeline_run_id')
-    log_dbt_test_results(run_id, DBT_PROJECT_PATH, "GOLD")
+    
+    source_results = os.path.join(DBT_PROJECT_PATH, 'target', 'run_results.json')
+    isolated_dir = os.path.join(DBT_PROJECT_PATH, 'target', layer_name.lower())
+    isolated_results = os.path.join(isolated_dir, 'run_results.json')
+    
+    if os.path.exists(source_results):
+        os.makedirs(isolated_dir, exist_ok=True)
+        shutil.copy2(source_results, isolated_results)
+        log_dbt_test_results(run_id, isolated_dir, layer_name)
+    else:
+        # Fallback to project root if standard execution patterns vary
+        log_dbt_test_results(run_id, DBT_PROJECT_PATH, layer_name)
 
 def execute_audit_logging(**context):
     from src.quality.tests import log_pipeline_run
@@ -85,13 +90,15 @@ task_validate_bronze = PythonOperator(
 
 task_audit_silver_metrics = PythonOperator(
     task_id='audit_silver_metrics',
-    python_callable=capture_silver_metrics,
+    python_callable=capture_layer_metrics,
+    op_kwargs={'layer_name': 'SILVER'},
     dag=dag,
 )
 
 task_audit_gold_metrics = PythonOperator(
     task_id='audit_gold_metrics',
-    python_callable=capture_gold_metrics,
+    python_callable=capture_layer_metrics,
+    op_kwargs={'layer_name': 'GOLD'},
     dag=dag,
 )
 
